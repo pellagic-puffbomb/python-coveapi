@@ -36,18 +36,16 @@ class PBSAuthorization(object):
         instance of `urllib2.Request` (signed)
         """
         timestamp = str(time.time())
-        nonce = urlsafe_b64encode(urandom(32)).strip("=")
-        
+        nonce = (urlsafe_b64encode(urandom(32)).strip(b'=')).decode()
         query = request.get_full_url()
-        to_be_signed = 'GET%s%s%s%s' % (query, timestamp,
-                                        self.api_app_id, nonce)
+        to_be_signed = 'GET{query}{timestamp}{self.api_app_id}{nonce}'.format_map(vars())
+
         signature = hmac.new(self.api_app_secret.encode('utf-8'),
-                             to_be_signed.encode('utf-8'),
-                             sha1).hexdigest()
-        
+                             to_be_signed.encode('utf-8'), sha1).hexdigest()
+
         request.add_header('X-PBSAuth-Timestamp', timestamp)
         request.add_header('X-PBSAuth-Consumer-Key', self.api_app_id)
         request.add_header('X-PBSAuth-Signature', signature)
         request.add_header('X-PBSAuth-Nonce', nonce)
-    
+
         return request

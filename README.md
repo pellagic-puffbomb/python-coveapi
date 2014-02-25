@@ -1,5 +1,14 @@
 # Overview
 
+This is a forked copy of the Python-coveapi for use with Python3. The original version is located [here](https://github.com/pellagic-puffbomb/python-coveapi)
+
+I have forked this version in order to use python-coveapi with Python3. For use with Python2, see the [original version](https://github.com/pellagic-puffbomb/python-coveapi).
+
+Below is original Readme from main project...
+
+
+# Original Project Readme
+
 Python-coveapi is the Python client for the PBS COVE API service.
 
 

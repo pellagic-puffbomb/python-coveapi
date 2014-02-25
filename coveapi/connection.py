@@ -1,10 +1,11 @@
 """Module: `coveapi.connection`
 Connection classes for accessing COVE API.
 """
-import urllib
-import urllib2
 
-import simplejson as json
+import urllib
+import json
+from collections import OrderedDict
+
 
 from coveapi import COVEAPI_HOST, COVEAPI_ENDPOINT_CATEGORIES, \
     COVEAPI_ENDPOINT_GROUPS, COVEAPI_ENDPOINT_PROGRAMS, \
@@ -39,7 +40,7 @@ class COVEAPIConnection(object):
         Returns:
         `coveapi.connection.Requestor` instance
         """
-        endpoint = '%s%s' % (self.api_host, COVEAPI_ENDPOINT_PROGRAMS)
+        endpoint = '{0}{1}'.format(self.api_host, COVEAPI_ENDPOINT_PROGRAMS)
         return Requestor(self.api_app_id, self.api_app_secret, endpoint,
                          self.api_host)
 
@@ -54,7 +55,7 @@ class COVEAPIConnection(object):
         Returns:
         `coveapi.connection.Requestor` instance
         """
-        endpoint = '%s%s' % (self.api_host, COVEAPI_ENDPOINT_CATEGORIES)
+        endpoint = '{0}{1}'.format(self.api_host, COVEAPI_ENDPOINT_CATEGORIES)
         return Requestor(self.api_app_id, self.api_app_secret, endpoint,
                          self.api_host)
 
@@ -69,7 +70,7 @@ class COVEAPIConnection(object):
         Returns:
        `coveapi.connection.Requestor` instance
         """
-        endpoint = '%s%s' % (self.api_host, COVEAPI_ENDPOINT_GROUPS)
+        endpoint = '{0}{1}'.format(self.api_host, COVEAPI_ENDPOINT_GROUPS)
         return Requestor(self.api_app_id, self.api_app_secret, endpoint,
                          self.api_host)
 
@@ -84,7 +85,7 @@ class COVEAPIConnection(object):
         Returns:
         `coveapi.connection.Requestor` instance
         """
-        endpoint = '%s%s' % (self.api_host, COVEAPI_ENDPOINT_VIDEOS)
+        endpoint = '{0}{1}'.format(self.api_host, COVEAPI_ENDPOINT_VIDEOS)
         return Requestor(self.api_app_id, self.api_app_secret, endpoint,
                          self.api_host)
 
@@ -119,12 +120,12 @@ class Requestor(object):
         `dict` (json)
         """
         if type(resource) == int:
-            endpoint = '%s%s/' % (self.endpoint, resource)
+            endpoint = '{0}{1}'.format(self.endpoint, resource)
         else:
             if resource.startswith('http://'):
                 endpoint = resource
             else:
-                endpoint = '%s%s' % (self.api_host, resource)
+                endpoint = '{0}{1}'.format(self.api_host, resource)
         
         return self._make_request(endpoint, params)
 
@@ -156,8 +157,8 @@ class Requestor(object):
 
         query = endpoint
         if params:
-            params = params.items()
-            params.sort()
+            sorted_dict = sorted(params.items(), key=lambda x: x[0])
+            sorted_params = OrderedDict(sorted_dict)
             
             # Note: We're using urllib.urlencode() below which escapes spaces as
             # a plus ("+") since that is what the COVE API expects. But a space
@@ -165,13 +166,17 @@ class Requestor(object):
             # this is a bug in the COVE API authentication scheme... but we have
             # to live with this in the client. We'll update this to use "%20"
             # once the COVE API supports it properly.
-            query = '%s?%s' % (query, urllib.urlencode(params))
+            
+            
+            query = '{0}?{1}'.format(query, urllib.parse.urlencode(sorted_params))
         
-        request = urllib2.Request(query)
+        request = urllib.request.Request(query)
         
         auth = PBSAuthorization(self.api_app_id, self.api_app_secret)
         signed_request = auth.sign_request(request)
         
-        response = urllib2.urlopen(signed_request)
-        
-        return json.loads(response.read())
+        response = urllib.request.urlopen(signed_request)
+
+        str_response = response.readall().decode('utf-8')
+        obj = json.loads(str_response)
+        return obj
