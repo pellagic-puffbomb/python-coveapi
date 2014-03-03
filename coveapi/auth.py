@@ -47,5 +47,4 @@ class PBSAuthorization(object):
         request.add_header('X-PBSAuth-Consumer-Key', self.api_app_id)
         request.add_header('X-PBSAuth-Signature', signature)
         request.add_header('X-PBSAuth-Nonce', nonce)
-
         return request
